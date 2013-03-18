@@ -55,7 +55,7 @@ class SimpleBot::LunchMe < SimpleBot::BasicBot
   end
   
   def parse_command(command)
-    parts = command.split(" ").map(&:downcase)
+    parts = command.strip.split(" ").map(&:downcase)
     if parts.size == 0
       return "I have no idea what you want from me."
     end
@@ -66,7 +66,7 @@ class SimpleBot::LunchMe < SimpleBot::BasicBot
   def run
     start("fwd_lunchme", "fwd_lunchme") do |irc, user, channel, message|
       if message =~ /^lunchme:/
-        irc.message! parse_command(message.gsub(/^lunchme:\s/, ""))
+        irc.message! parse_command(message.gsub(/^lunchme:/, ""))
       end
     end
   end
