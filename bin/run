@@ -1,0 +1,61 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+
+
+require File.join(File.dirname(__FILE__) , *%w[.. lib simple_bot])
+
+
+
+module SimpleBot
+  
+  @password = nil
+  @bot = nil
+  @botname = nil
+  
+  OptionParser.new do |opts|
+    opts.banner = "Usage: Simple Banner [options]"
+    
+    opts.on('-b', '--bot [bot]', 'Use given bot, lists available bots if no bot name given') do |bot|
+      if (bot)
+        if SimpleBot::BOTS[bot].nil?
+          puts "Bot '#{bot}' not recognised".red
+          exit
+        end
+        @botname = bot
+        @bot = SimpleBot::BOTS[bot].new
+      else
+        puts "Bot names\n-----------"
+        SimpleBot::BOTS.keys.each{|b| puts b}
+        exit
+      end
+    end
+    
+    opts.on('-p', '--password [password]', 'Server password') do |password|
+      if(password)
+        @password = password
+      end
+    end
+    
+    
+    opts.on('-h', '--help', 'Show this message.') do
+      puts opts
+      exit
+    end
+  end.parse!
+
+  
+
+  SimpleBot.configure do |config|
+    config.password = @password
+  end
+  
+  if(!@bot)
+    puts "No Bot Given".red
+  else
+    puts "Running #{@botname}".green
+    @bot.run
+  end
+  
+
+end
