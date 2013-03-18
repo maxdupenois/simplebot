@@ -14,7 +14,7 @@ module SimpleBot
   @botname = nil
   
   OptionParser.new do |opts|
-    opts.banner = "Usage: Simple Banner [options]"
+    opts.banner = "SimpleBot Commands"
     
     opts.on('-b', '--bot [bot]', 'Use given bot, lists available bots if no bot name given') do |bot|
       if (bot)
