@@ -52,7 +52,7 @@ class SimpleBot::CommandBot < SimpleBot::BasicBot
   end
   
   def show_help(*args)
-    @command.keys.reduce([]) do |memo, (key, command)|
+    @commands.reduce([]) do |memo, (key, command)|
       memo << "#{key} => #{command.description} args: #{command.argument_length}"
       memo
     end.join(" | ")
