@@ -49,6 +49,7 @@ end
 
 require File.join(File.dirname(__FILE__), *%w[simple_bot lightweight_irc_connector])
 require File.join(File.dirname(__FILE__), *%w[simple_bot basic_bot])
+require File.join(File.dirname(__FILE__), *%w[simple_bot command_bot])
 
 
 Dir[File.join(File.dirname(__FILE__), "simple_bot", "bots", '*.rb')].each do |f|

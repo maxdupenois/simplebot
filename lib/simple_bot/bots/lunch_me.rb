@@ -1,4 +1,4 @@
-class SimpleBot::LunchMe < SimpleBot::BasicBot
+class SimpleBot::LunchMe < SimpleBot::CommandBot
   register "lunchme"
   
   LUNCH_OPTS = {
@@ -12,62 +12,58 @@ class SimpleBot::LunchMe < SimpleBot::BasicBot
     "miscellaneous" => ["Blues Kitchen", "Camden Bar and Kitchen"]
   }
   
-  class Command
-    @@commands = {}
-    def self.add(name, method, arg_length)
-      @@commands[name] = {:method => method, :length => arg_length}
-    end
-    def self.commands
-      @@commands
-    end
-    
-    def self.run(bot, name, args)
-      return "You speak to your mother with that mouth" if([:fuck, :shit, :wanker, :dick].include?(name))
-      return "Command '#{name}' not recognised" if(@@commands[name].nil?)
-      cmd = @@commands[name]
-      return "Command '#{name}' requires #{cmd[:length]} arguments" if(cmd[:length] > args.size)
-      bot.send(cmd[:method], *args)
-    end
-    
+
+  
+  def add_lunch_option(user, type, *restaraunt)
+    LUNCH_OPTS[type.downcase] = [] if LUNCH_OPTS[type.downcase].nil?
+    LUNCH_OPTS[type.downcase] << restaraunt.join(" ").capitalize
+    "No worries #{user}, i've added '#{restaraunt.join(" ").capitalize}' to lunch options type #{type}"
   end
   
-  Command.add(:add, :add_lunch_option, 2)
-  Command.add(:choose, :choose_lunch_option, 0)
-  Command.add(:help, :list_commands, 0)
-  
-  def list_commands
-    str = "Commands: "
-    str += Command.commands.reduce([]) do |memo, (key, val)|
-      memo << "'#{key}' [#{val[:length]} args]"
-    end.join("; ")
-  end
-  
-  def add_lunch_option(type, *restaraunt)
-    LUNCH_OPTS[type] = [] if LUNCH_OPTS[type].nil?
-    LUNCH_OPTS[type] << restaraunt.join(" ").capitalize
-    "Added '#{restaraunt.join(" ").capitalize}' to lunch options type #{type}"
-  end
-  
-  def choose_lunch_option
-    type = LUNCH_OPTS.keys.sample
+  def choose_lunch_option(user, *args)
+    if(args[0] && LUNCH_OPTS[args[0].downcase]) 
+      type = args[0].downcase
+    else 
+      type = LUNCH_OPTS.keys.sample
+    end
     restaurant = LUNCH_OPTS[type].sample
-    "You should go to #{restaurant} to consume #{type}!"
+    "#{user} you should go to #{restaurant} to consume #{type}!"
   end
   
-  def parse_command(command)
-    parts = command.strip.split(" ").map(&:downcase)
-    if parts.size == 0
-      return "I have no idea what you want from me."
+  def list(user, *args)
+    if(args[0] && LUNCH_OPTS[args[0].downcase]) 
+      return "Ah, #{args[0]}, I know of #{LUNCH_OPTS[args[0].downcase].size} #{args[0]} place(s) to eat: #{LUNCH_OPTS[args[0].downcase].join(", ")}"
     end
-    args = (parts.length > 1 ? parts[1..-1] : [])
-    return Command.run(self, parts[0].to_sym, args)
+    LUNCH_OPTS.reduce([]) do |memo, (key, val)|
+      memo << "#{key} => [#{val.join(", ")}]"
+      memo
+    end.join(" | ")
+  end
+  
+  def should(user, person, *args)
+    declarative = person.downcase == "i" ?  "you" : person.downcase.capitalize
+    name = person.downcase == "i" ?  user : person.downcase.capitalize 
+    return "Should #{declarative} what?" if(args.empty?)
+    if args[0] =~ /eat/i
+      return "Probably, it's considered a good idea by most cultures" if(args.size == 1)
+      return ["No that's a truly terrible idea, you've let me down, you've let the room down, but most of all you've let Rylon down",
+              "Genius, I think you're on to something, #{declarative} should definitely partake in some tasty #{args[1..-1].join(" ")}"].sample
+    elsif args[0] =~ /go/i
+      return "Go on now go #{name}, walk out the door, just turn around now, you're not welcome any more." if(args.size == 1)
+      return ["#{name}, your mother would be so disappointed in your behaviour, I don't want you hanging around with that samwho any more, he's a bad example.",
+              "#{declarative} should definitely go #{args[1..-1].join(" ")}, this may well be the greatest idea since the invention of extra large condom"].sample
+    else 
+      return "I'm young and don't know what #{args.join(" ")} means, maybe #{name} could show me later tonight? I'll bring the wine."
+    end  
   end
   
   def run
-    start("fwd_lunchme", "fwd_lunchme") do |irc, user, channel, message|
-      if message =~ /^lunchme:/
-        irc.message! parse_command(message.gsub(/^lunchme:/, ""))
-      end
-    end
+    command_prepend "lunchme:"
+    command "add", "Allows you to add new lunch options", :add_lunch_option, 2
+    command "choose", "Randomly selects a lunch option, can be given a type", :choose_lunch_option, 0
+    command "list", "Shows the available options currently held in memory, can be given a type", :list, 0
+    command "should", "Slightly smarter more interesting", :should, 1
+    
+    start("fwd_lunchme", "fwd_lunchme")
   end
 end
