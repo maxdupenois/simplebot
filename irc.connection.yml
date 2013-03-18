@@ -1,5 +1,5 @@
 connection:
   hostname: lalo-g7stltno.dotcloud.com
-  channel: asdasdasdasdasasdasdasd
+  channel: fwd
   port: 45944
   ssl: true
